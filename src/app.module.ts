@@ -3,8 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MercadopagoModule } from './mercadopago/mercadopago.module';
-
+import { ScanModule } from './scan/scan.module';
 
 @Module({
   imports: [
@@ -12,9 +11,7 @@ import { MercadopagoModule } from './mercadopago/mercadopago.module';
       isGlobal: true,
     }),
 
-    MercadopagoModule,
-
-    MercadopagoModule,
+    ScanModule,
   ],
 
   controllers: [
