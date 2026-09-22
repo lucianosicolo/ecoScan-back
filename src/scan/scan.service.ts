@@ -6,6 +6,7 @@ import {
 
 import { GoogleGenAI } from '@google/genai';
 import { ConfigService } from '@nestjs/config';
+import { HistorialService } from 'src/historico-scan/historico-scan.service';
 
 export type WasteCategory =
   | 'plastico'
@@ -38,6 +39,7 @@ export class ScanService {
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly historialService: HistorialService,
   ) {
     const apiKey =
       this.configService.get<string>('GEMINI_API_KEY');
@@ -57,7 +59,7 @@ export class ScanService {
       'gemini-3.5-flash-lite';
   }
   private readonly apiUrl =
-  'http://localhost:3000/scan';
+    'http://localhost:3000/scan';
   private async generateWithRetry(
     imageBase64: string,
     mimeType: string,
@@ -150,6 +152,7 @@ export class ScanService {
   }
   async analyzeImage(
     file: Express.Multer.File,
+      userId: number,
   ): Promise<ScanResult> {
     try {
       const imageBase64 =
@@ -173,7 +176,15 @@ export class ScanService {
         responseText,
       ) as ScanResult;
 
-      return this.normalizeResult(parsedResult);
+      const normalizedResult =
+        this.normalizeResult(parsedResult);
+
+      await this.historialService.create(
+        normalizedResult,
+        userId,
+      );
+
+      return normalizedResult;
     } catch (error) {
       if (
         error instanceof ServiceUnavailableException
@@ -198,8 +209,8 @@ export class ScanService {
     }
   }
 
-private getPrompt(): string {
-  return `
+  private getPrompt(): string {
+    return `
 Analizá la imagen de un posible residuo doméstico.
 
 El alcance de EcoScan está limitado exclusivamente a estas
@@ -324,92 +335,92 @@ Los únicos valores permitidos para "estado" son:
 - "no_apto"
 - "desconocido"
   `.trim();
-}
-
-  private normalizeResult(
-  result: ScanResult,
-): ScanResult {
-  const validCategories: WasteCategory[] = [
-    'plastico',
-    'lata',
-    'vidrio',
-    'papel',
-    'carton',
-    'desconocido',
-  ];
-
-  const validStatuses: RecyclingStatus[] = [
-    'apto',
-    'no_apto',
-    'desconocido',
-  ];
-
-  let categoria: WasteCategory =
-    validCategories.includes(result.categoria)
-      ? result.categoria
-      : 'desconocido';
-
-  let estado: RecyclingStatus =
-    validStatuses.includes(result.estado)
-      ? result.estado
-      : 'desconocido';
-
-  /*
-   * Si la categoría o el estado son desconocidos,
-   * todo el resultado queda fuera del alcance.
-   */
-  if (
-    categoria === 'desconocido' ||
-    estado === 'desconocido'
-  ) {
-    categoria = 'desconocido';
-    estado = 'desconocido';
   }
 
-  const reciclable =
-    estado === 'apto';
+  private normalizeResult(
+    result: ScanResult,
+  ): ScanResult {
+    const validCategories: WasteCategory[] = [
+      'plastico',
+      'lata',
+      'vidrio',
+      'papel',
+      'carton',
+      'desconocido',
+    ];
 
-  const confidence =
-    Number(result.confianza);
+    const validStatuses: RecyclingStatus[] = [
+      'apto',
+      'no_apto',
+      'desconocido',
+    ];
 
-  const preparacion =
-    estado === 'apto' &&
-    Array.isArray(result.preparacion)
-      ? result.preparacion.filter(
+    let categoria: WasteCategory =
+      validCategories.includes(result.categoria)
+        ? result.categoria
+        : 'desconocido';
+
+    let estado: RecyclingStatus =
+      validStatuses.includes(result.estado)
+        ? result.estado
+        : 'desconocido';
+
+    /*
+     * Si la categoría o el estado son desconocidos,
+     * todo el resultado queda fuera del alcance.
+     */
+    if (
+      categoria === 'desconocido' ||
+      estado === 'desconocido'
+    ) {
+      categoria = 'desconocido';
+      estado = 'desconocido';
+    }
+
+    const reciclable =
+      estado === 'apto';
+
+    const confidence =
+      Number(result.confianza);
+
+    const preparacion =
+      estado === 'apto' &&
+        Array.isArray(result.preparacion)
+        ? result.preparacion.filter(
           (instruction) =>
             typeof instruction === 'string' &&
             instruction.trim().length > 0,
         )
-      : [];
+        : [];
 
-  return {
-    categoria,
+    return {
+      categoria,
 
-    objeto:
-      result.objeto?.trim() ||
-      'Objeto no identificado',
+      objeto:
+        result.objeto?.trim() ||
+        'Objeto no identificado',
 
-    material:
-      result.material?.trim() ||
-      'Material desconocido',
+      material:
+        result.material?.trim() ||
+        'Material desconocido',
 
-    reciclable,
-    estado,
+      reciclable,
+      estado,
 
-    confianza:
-      Number.isFinite(confidence)
-        ? Math.round(
+      confianza:
+        Number.isFinite(confidence)
+          ? Math.round(
             Math.max(
               0,
               Math.min(100, confidence),
             ),
           )
-        : 0,
+          : 0,
 
-    preparacion,
+      preparacion,
 
-    observacion:
-      result.observacion?.trim() || '',
-  };
-}
+      observacion:
+        result.observacion?.trim() || '',
+    };
+  }
 }

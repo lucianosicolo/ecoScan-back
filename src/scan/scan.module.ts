@@ -1,10 +1,34 @@
-import { Module } from '@nestjs/common';
+import {
+  Module,
+} from '@nestjs/common';
 
-import { ScanController } from './scan.controller';
-import { ScanService } from './scan.service';
+import {
+  AuthModule,
+} from '../auth/auth.module';
+
+
+
+import {
+  ScanController,
+} from './scan.controller';
+
+import {
+  ScanService,
+} from './scan.service';
+import { HistorialModule } from 'src/historico-scan/historico-scan.module';
 
 @Module({
-  controllers: [ScanController],
-  providers: [ScanService],
+  imports: [
+    AuthModule,
+    HistorialModule,
+  ],
+
+  controllers: [
+    ScanController,
+  ],
+
+  providers: [
+    ScanService,
+  ],
 })
 export class ScanModule {}
