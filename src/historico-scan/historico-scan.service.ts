@@ -6,7 +6,13 @@ import {
 import {
   InjectRepository,
 } from '@nestjs/typeorm';
+import {
+  unlink,
+} from 'fs/promises';
 
+import {
+  join,
+} from 'path';
 import {
   Repository,
 } from 'typeorm';
@@ -36,7 +42,51 @@ export class HistorialService {
     private readonly usersService:
       UsersService,
   ) {}
+private async deleteImage(
+  imagenUrl: string | null,
+): Promise<void> {
 
+  if (!imagenUrl) {
+    return;
+  }
+
+  const relativePath =
+    imagenUrl.replace(
+      /^\/+/,
+      '',
+    );
+
+  const filePath =
+    join(
+      process.cwd(),
+      relativePath,
+    );
+
+  try {
+
+    await unlink(
+      filePath,
+    );
+
+  } catch (error: unknown) {
+
+    const fileError =
+      error as {
+        code?: string;
+      };
+
+    if (
+      fileError.code === 'ENOENT'
+    ) {
+      return;
+    }
+
+    console.error(
+      'Error eliminando imagen:',
+      error,
+    );
+  }
+}
   async create(
     createHistorialDto:
       CreateHistorialDto,
@@ -107,20 +157,27 @@ export class HistorialService {
     return historial;
   }
 
-  async remove(
-    id: number,
-    userId: number,
-  ): Promise<void> {
+async remove(
+  id: number,
+  userId: number,
+): Promise<void> {
 
-    const historial =
-      await this.findOne(
-        id,
-        userId,
-      );
+  const historial =
+    await this.findOne(
+      id,
+      userId,
+    );
 
-    await this.historialRepository
-      .remove(
-        historial,
-      );
-  }
+  const imagenUrl =
+    historial.imagenUrl;
+
+  await this.historialRepository
+    .remove(
+      historial,
+    );
+
+  await this.deleteImage(
+    imagenUrl,
+  );
+}
 }

@@ -21,7 +21,7 @@ export class CreateHistorialDto {
     reciclable: boolean;
 
     estado: RecyclingStatus;
-
+imagenUrl?: string;
     confianza: number;
 
     preparacion: string[];

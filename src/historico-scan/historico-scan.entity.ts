@@ -76,7 +76,13 @@ export class historicoScanEntity {
     type: 'timestamp',
   })
   createdAt: Date;
-
+@Column({
+  name: 'imagen_url',
+  type: 'varchar',
+  length: 255,
+  nullable: true,
+})
+imagenUrl: string | null;
   @ManyToOne(
     () => User,
     {

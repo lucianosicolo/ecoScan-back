@@ -3,7 +3,18 @@ import {
   InternalServerErrorException,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import {
+  mkdir,
+  writeFile,
+} from 'fs/promises';
 
+import {
+  join,
+} from 'path';
+
+import {
+  randomUUID,
+} from 'crypto';
 import { GoogleGenAI } from '@google/genai';
 import { ConfigService } from '@nestjs/config';
 import { HistorialService } from 'src/historico-scan/historico-scan.service';
@@ -30,6 +41,7 @@ export interface ScanResult {
   confianza: number;
   preparacion: string[];
   observacion: string;
+  imagenUrl?: string;
 }
 
 @Injectable()
@@ -124,7 +136,58 @@ export class ScanService {
       'El servicio de análisis no está disponible',
     );
   }
+  private async saveImage(
+    file: Express.Multer.File,
+  ): Promise<string> {
 
+    const uploadsDirectory =
+      join(
+        process.cwd(),
+        'uploads',
+        'scans',
+      );
+
+    await mkdir(
+      uploadsDirectory,
+      {
+        recursive: true,
+      },
+    );
+
+    let extension = 'jpg';
+
+    if (
+      file.mimetype ===
+      'image/png'
+    ) {
+      extension = 'png';
+    }
+
+    if (
+      file.mimetype ===
+      'image/webp'
+    ) {
+      extension = 'webp';
+    }
+
+    const filename =
+      `${randomUUID()}.${extension}`;
+
+    const filePath =
+      join(
+        uploadsDirectory,
+        filename,
+      );
+
+    await writeFile(
+      filePath,
+      file.buffer,
+    );
+
+    return (
+      `/uploads/scans/${filename}`
+    );
+  }
   private getApiStatus(
     error: unknown,
   ): number | undefined {
@@ -152,7 +215,7 @@ export class ScanService {
   }
   async analyzeImage(
     file: Express.Multer.File,
-      userId: number,
+    userId: number,
   ): Promise<ScanResult> {
     try {
       const imageBase64 =
@@ -177,14 +240,27 @@ export class ScanService {
       ) as ScanResult;
 
       const normalizedResult =
-        this.normalizeResult(parsedResult);
+        this.normalizeResult(
+          parsedResult,
+        );
+
+      const imagenUrl =
+        await this.saveImage(
+          file,
+        );
 
       await this.historialService.create(
-        normalizedResult,
+        {
+          ...normalizedResult,
+          imagenUrl,
+        },
         userId,
       );
 
-      return normalizedResult;
+      return {
+        ...normalizedResult,
+        imagenUrl,
+      };
     } catch (error) {
       if (
         error instanceof ServiceUnavailableException
