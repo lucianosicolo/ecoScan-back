@@ -12,11 +12,11 @@ import {
   join,
 } from 'path';
 
+import { GoogleGenAI } from '@google/genai';
+import { ConfigService } from '@nestjs/config';
 import {
   randomUUID,
 } from 'crypto';
-import { GoogleGenAI } from '@google/genai';
-import { ConfigService } from '@nestjs/config';
 import { HistorialService } from 'src/historico-scan/historico-scan.service';
 
 export type WasteCategory =
@@ -298,17 +298,86 @@ cinco categorías:
 4. "papel": hojas, diarios, revistas y papeles.
 5. "carton": cajas y envases de cartón.
 
-Utilizá la categoría "desconocido" cuando:
+IMPORTANTE:
 
-- El objeto no corresponda a ninguna de las cinco categorías.
-- Aparezcan residuos orgánicos, comida, carne o vegetales.
-- Aparezcan prendas, aparatos electrónicos, pilas o cerámica.
-- Aparezca un objeto de plástico que no sea una botella.
-- No haya un residuo claramente visible.
-- La imagen esté demasiado oscura o borrosa.
-- No sea posible determinar el material con suficiente claridad.
+La categoría "desconocido" puede representar dos situaciones
+diferentes:
 
-No amplíes las categorías aunque reconozcas otro tipo de residuo.
+A) OBJETO IDENTIFICADO PERO FUERA DEL ALCANCE:
+El objeto puede reconocerse visualmente, pero no pertenece a
+ninguna de las cinco categorías admitidas por EcoScan.
+
+En este caso:
+
+- Usá "categoria": "desconocido".
+- Usá "estado": "desconocido".
+- Usá "reciclable": false.
+- Identificá igualmente el objeto en "objeto".
+- Indicá el material en "material" si puede determinarse
+  visualmente.
+- La confianza puede ser alta si el objeto se reconoce con
+  claridad.
+- En "observacion", explicá que el objeto fue identificado,
+  pero se encuentra fuera del alcance de EcoScan.
+- No utilices "Objeto no identificado" si realmente podés
+  reconocer qué objeto aparece.
+
+Ejemplo:
+
+Una botella reutilizable de acero inoxidable debe devolver
+algo similar a:
+
+{
+  "categoria": "desconocido",
+  "objeto": "Botella reutilizable",
+  "material": "Acero inoxidable",
+  "reciclable": false,
+  "estado": "desconocido",
+  "confianza": 94,
+  "preparacion": [],
+  "observacion": "El objeto fue identificado, pero su material no pertenece a las categorías contempladas por EcoScan."
+}
+
+B) OBJETO NO IDENTIFICABLE:
+Utilizá esta situación únicamente cuando la imagen realmente
+no permita determinar qué objeto o residuo aparece.
+
+Por ejemplo:
+
+- No hay un residuo claramente visible.
+- La imagen está demasiado oscura.
+- La imagen está demasiado borrosa.
+- Hay varios objetos y no puede determinarse cuál analizar.
+- No puede identificarse el objeto con suficiente claridad.
+
+En este caso:
+
+- Usá "categoria": "desconocido".
+- Usá "estado": "desconocido".
+- Usá "reciclable": false.
+- En "objeto", utilizá "Objeto no identificado".
+- En "material", utilizá "Material desconocido" si tampoco
+  puede determinarse.
+- La confianza debe ser baja cuando la identificación visual
+  sea insuficiente.
+- En "observacion", explicá brevemente por qué no pudo
+  identificarse.
+
+También se consideran FUERA DEL ALCANCE, aunque puedan
+identificarse correctamente:
+
+- Residuos orgánicos, comida, carne o vegetales.
+- Prendas o textiles.
+- Aparatos electrónicos.
+- Pilas o baterías.
+- Cerámica.
+- Objetos de plástico que no sean botellas.
+- Objetos metálicos que no sean latas de bebidas o alimentos.
+- Otros objetos que no pertenezcan a las cinco categorías
+  admitidas.
+
+No amplíes las categorías aunque reconozcas otro tipo de
+residuo.
 
 Asigná exactamente uno de estos estados:
 
@@ -323,8 +392,8 @@ Asigná exactamente uno de estos estados:
   humedad severa o restos orgánicos adheridos.
 
 - "desconocido":
-  El objeto está fuera del alcance, no hay un residuo visible
-  o la imagen no permite identificarlo correctamente.
+  El objeto está fuera del alcance de EcoScan o la imagen no
+  permite identificarlo correctamente.
 
 Reglas para "reciclable":
 
@@ -371,9 +440,12 @@ Reglas de análisis:
   severa y claramente visible.
 - Ante una duda importante sobre la categoría, utilizá
   "desconocido".
-- La confianza debe representar la claridad visual de la
-  clasificación del objeto y debe ser un número entero entre
-  0 y 100.
+- Si reconocés claramente un objeto fuera del alcance, no
+  reduzcas artificialmente la confianza solo por estar fuera
+  de las categorías permitidas.
+- La confianza debe representar la claridad visual con la que
+  se pudo identificar y clasificar el objeto observado.
+- La confianza debe ser un número entero entre 0 y 100.
 - No agregues texto, Markdown ni explicaciones fuera del JSON.
 
 Respondé únicamente con un JSON válido usando exactamente
@@ -412,7 +484,6 @@ Los únicos valores permitidos para "estado" son:
 - "desconocido"
   `.trim();
   }
-
   private normalizeResult(
     result: ScanResult,
   ): ScanResult {
