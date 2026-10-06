@@ -40,20 +40,7 @@ export class UsersController {
       UsersService,
   ) {}
 
-  @Post()
-  create(
-    @Body()
-    usersDto: UsersDto,
-  ) {
-    return this.usersService.create(
-      usersDto,
-    );
-  }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
 
   @Get(':id')
   findOne(
