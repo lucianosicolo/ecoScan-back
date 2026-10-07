@@ -70,8 +70,8 @@ export class ScanService {
       this.configService.get<string>('GEMINI_MODEL') ??
       'gemini-3.5-flash-lite';
   }
-  private readonly apiUrl =
-    'http://localhost:3000/scan';
+  // private readonly apiUrl =
+  //   'http://localhost:3000/scan';
   private async generateWithRetry(
     imageBase64: string,
     mimeType: string,
