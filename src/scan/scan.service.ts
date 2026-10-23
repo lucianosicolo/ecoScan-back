@@ -99,7 +99,6 @@ export class ScanService {
 
           config: {
             responseMimeType: 'application/json',
-            temperature: 0.1,
           },
         });
       } catch (error: unknown) {
