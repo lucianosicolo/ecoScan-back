@@ -18,6 +18,8 @@ import {
   AppModule,
 } from './app.module';
 
+import { isAllowedCorsOrigin } from './cors.config';
+
 async function bootstrap(): Promise<void> {
 
   const app =
@@ -36,13 +38,9 @@ async function bootstrap(): Promise<void> {
   );
 
   app.enableCors({
-    origin: [
-      'http://localhost',
-      'https://localhost',
-      'capacitor://localhost',
-      'http://localhost:4200',
-      'http://localhost:8100',
-    ],
+    origin: (origin, callback) => {
+      callback(null, isAllowedCorsOrigin(origin));
+    },
 
     methods: [
       'GET',
