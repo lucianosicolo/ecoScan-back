@@ -1,8 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+} from '@nestjs/common';
+
+export interface HealthResponse {
+  status: 'ok';
+  service: 'ecoscan-back';
+  version: '1.0.0';
+}
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+
+  getHealth():
+    HealthResponse {
+
+    return {
+      status: 'ok',
+      service: 'ecoscan-back',
+      version: '1.0.0',
+    };
   }
 }
