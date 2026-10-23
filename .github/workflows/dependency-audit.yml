@@ -1,0 +1,43 @@
+name: Production Dependency Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audit production dependencies
+        run: |
+          npm audit --omit=dev --json > npm-audit.json || true
+          node <<'NODE'
+          const fs = require('fs');
+          const result = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          if (result.error) {
+            console.error('npm audit failed:', result.error);
+            process.exitCode = 1;
+          } else {
+            const entries = Object.entries(result.vulnerabilities || {});
+            const meta = result.metadata?.vulnerabilities || {};
+            console.log('Production dependency summary:', JSON.stringify(meta));
+            for (const [name, item] of entries) {
+              if (item.severity === 'critical' || item.severity === 'high') {
+                console.log(name + ': ' + item.severity + ', fix=' + JSON.stringify(item.fixAvailable));
+              }
+            }
+            if ((meta.critical || 0) > 0) {
+              console.error('Critical vulnerabilities detected in production dependencies.');
+              process.exitCode = 1;
+            }
+          }
+          NODE
