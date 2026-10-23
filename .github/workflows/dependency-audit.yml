@@ -41,10 +41,3 @@ jobs:
             }
           }
           NODE
-
-      - name: Preview compatible security fixes
-        if: always()
-        run: |
-          npm audit fix --package-lock-only --omit=dev --ignore-scripts || true
-          git diff --stat -- package-lock.json
-          git diff --unified=1 -- package-lock.json
