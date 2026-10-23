@@ -70,8 +70,6 @@ export class ScanService {
       this.configService.get<string>('GEMINI_MODEL') ??
       'gemini-3.5-flash-lite';
   }
-  // private readonly apiUrl =
-  //   'http://localhost:3000/scan';
   private async generateWithRetry(
     imageBase64: string,
     mimeType: string,
@@ -108,11 +106,9 @@ export class ScanService {
         const status = this.getApiStatus(error);
 
         const shouldRetry =
-          status === 429 ||
-          status === 500 ||
-          status === 502 ||
-          status === 503 ||
-          status === 504;
+          this.isRetryableApiStatus(
+            status,
+          );
 
         if (
           !shouldRetry ||
@@ -208,10 +204,31 @@ export class ScanService {
     return undefined;
   }
 
-  private delay(milliseconds: number): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve, milliseconds);
-    });
+  private isRetryableApiStatus(
+    status: number | undefined,
+  ): boolean {
+
+    return (
+      status === 429 ||
+      status === 500 ||
+      status === 502 ||
+      status === 503 ||
+      status === 504
+    );
+  }
+
+  private delay(
+    milliseconds: number,
+  ): Promise<void> {
+
+    return new Promise(
+      (resolve) => {
+        setTimeout(
+          resolve,
+          milliseconds,
+        );
+      },
+    );
   }
   async analyzeImage(
     file: Express.Multer.File,
@@ -269,9 +286,13 @@ export class ScanService {
       }
       const status = this.getApiStatus(error);
 
-      if (status === 503) {
+      if (
+        this.isRetryableApiStatus(
+          status,
+        )
+      ) {
         throw new ServiceUnavailableException(
-          'Gemini está temporalmente saturado. Intentá nuevamente en unos minutos.',
+          'El servicio de análisis está temporalmente ocupado. Intentá nuevamente en unos instantes.',
         );
       }
       console.error(
