@@ -1,29 +1,79 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import {
+  INestApplication,
+} from '@nestjs/common';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+import {
+  Test,
+  TestingModule,
+} from '@nestjs/testing';
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+import request
+  from 'supertest';
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
+import {
+  App,
+} from 'supertest/types';
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
+import {
+  AppController,
+} from '../src/app.controller';
 
-  afterEach(async () => {
-    await app.close();
-  });
-});
+import {
+  AppService,
+} from '../src/app.service';
+
+describe(
+  'AppController (e2e)',
+  () => {
+
+    let app:
+      INestApplication<App>;
+
+    beforeEach(
+      async () => {
+
+        const moduleFixture:
+          TestingModule =
+          await Test
+            .createTestingModule({
+              controllers: [
+                AppController,
+              ],
+              providers: [
+                AppService,
+              ],
+            })
+            .compile();
+
+        app =
+          moduleFixture
+            .createNestApplication();
+
+        await app.init();
+      },
+    );
+
+    it(
+      '/ (GET)',
+      () => {
+
+        return request(
+          app.getHttpServer(),
+        )
+          .get('/')
+          .expect(200)
+          .expect({
+            status: 'ok',
+            service: 'ecoscan-back',
+            version: '1.0.0',
+          });
+      },
+    );
+
+    afterEach(
+      async () => {
+        await app.close();
+      },
+    );
+  },
+);
