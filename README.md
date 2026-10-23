@@ -21,13 +21,15 @@ Se encarga de autenticación, usuarios, análisis de imágenes mediante Gemini, 
 
 EcoScan contempla cinco categorías objetivo:
 
-- `plastico`: botellas plásticas
-- `lata`: latas metálicas de bebidas o alimentos
+- `plastico`: botellas de bebida PET
+- `lata`: latas de bebida de aluminio
 - `vidrio`: botellas y frascos de vidrio
-- `papel`: papel limpio
-- `carton`: cartón limpio
+- `papel`: papel (apto si está limpio y seco)
+- `carton`: cajas y envases de cartón (aptos si están limpios y secos)
 
-Los elementos fuera del alcance o no identificables utilizan `desconocido`.
+Los elementos fuera del alcance o que no puedan clasificarse con suficiente claridad utilizan `desconocido`. Una lata de conserva o una botella de un plástico distinto de PET no corresponde a las categorías objetivo. El papel y el cartón contaminados siguen siendo reconocidos dentro de su categoría, con estado `no_apto` cuando corresponda.
+
+**Limitación visual:** una fotografía no siempre permite confirmar que un envase sea de PET o aluminio. El prompt solicita una identificación orientativa basada en evidencias visuales y devuelve `desconocido` cuando no hay indicios suficientes. Esta restricción por prompt no reemplaza una evaluación con imágenes etiquetadas.
 
 ## Requisitos
 
