@@ -313,11 +313,15 @@ Analizá la imagen de un posible residuo doméstico.
 El alcance de EcoScan está limitado exclusivamente a estas
 cinco categorías:
 
-1. "plastico": únicamente botellas plásticas.
-2. "lata": latas metálicas de bebidas o alimentos.
+1. "plastico": únicamente botellas de bebidas fabricadas en PET.
+2. "lata": únicamente latas de bebidas fabricadas en aluminio.
 3. "vidrio": botellas y frascos de vidrio.
-4. "papel": hojas, diarios, revistas y papeles.
+4. "papel": hojas, diarios, revistas y otros papeles.
 5. "carton": cajas y envases de cartón.
+
+El papel y el cartón sucios o deteriorados siguen perteneciendo
+a sus respectivas categorías, pero deben recibir estado
+"no_apto" si la contaminación visible impide su reciclaje.
 
 IMPORTANTE:
 
@@ -392,8 +396,12 @@ identificarse correctamente:
 - Aparatos electrónicos.
 - Pilas o baterías.
 - Cerámica.
-- Objetos de plástico que no sean botellas.
-- Objetos metálicos que no sean latas de bebidas o alimentos.
+- Botellas plásticas que no sean de bebidas PET, como envases
+  de limpieza, botellas de otros polímeros o recipientes reutilizables.
+- Otros objetos de plástico que no sean botellas PET de bebidas.
+- Latas de conserva o alimentos y latas de acero u hojalata,
+  aunque tengan una forma parecida a una lata de bebida.
+- Otros objetos metálicos que no sean latas de bebidas de aluminio.
 - Otros objetos que no pertenezcan a las cinco categorías
   admitidas.
 
@@ -453,7 +461,25 @@ Reglas de análisis:
 - No afirmes que un envase está vacío, limpio o seco si no
   puede comprobarse visualmente.
 - No supongas contaminación que no sea visible.
-- No asegures el tipo exacto de plástico si no puede observarse.
+- Para clasificar una botella como "plastico", verificá que sea
+  de bebida y que existan indicios visuales compatibles con PET,
+  como el símbolo 1/PET, el rotulado o la apariencia habitual
+  de una botella descartable para bebidas. La apariencia por sí
+  sola no confirma químicamente que sea PET.
+- Para clasificar una lata como "lata", verificá que sea de bebida
+  y que haya indicios compatibles con aluminio. No confundas
+  una lata de conserva o una lata de acero con aluminio.
+- Si no hay indicios visuales suficientes para diferenciar PET
+  de otros plásticos, o aluminio de otros metales, utilizá
+  "desconocido" y explicá en "observacion" la incertidumbre.
+  Si el objeto se reconoce pero el material necesario para
+  asignarle una categoría no se puede determinar, utilizá
+  "Objeto no identificado" para indicar que la CLASIFICACIÓN
+  no pudo confirmarse, sin inventar el material.
+- No asegures PET ni aluminio como composición confirmada
+  cuando el rotulado no sea legible: indicá que la identificación
+  es orientativa y que el usuario debe verificar el símbolo o
+  la información del envase.
 - Si no podés determinar el material específico, utilizá una
   descripción general.
 - Ante la duda entre "apto" y "no_apto", utilizá "apto" con
@@ -475,7 +501,7 @@ esta estructura:
 {
   "categoria": "plastico",
   "objeto": "Botella de agua",
-  "material": "Plástico PET",
+  "material": "Plástico, compatible con PET",
   "reciclable": true,
   "estado": "apto",
   "confianza": 94,
@@ -486,7 +512,7 @@ esta estructura:
     "Aplastala para reducir su volumen",
     "Consultá en el punto verde si debés separar la tapa"
   ],
-  "observacion": "Botella plástica apta para reciclaje después de prepararla."
+  "observacion": "La botella de bebida parece compatible con PET. Verificá el símbolo del envase antes de depositarla en un punto verde."
 }
 
 Los únicos valores permitidos para "categoria" son:
