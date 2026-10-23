@@ -1,8 +1,8 @@
 {
-  "name": "ecoScan-back",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "name": "ecoscan-back",
+  "version": "1.0.0",
+  "description": "Backend de EcoScan para autenticacion, historial y clasificacion de residuos con IA",
+  "author": "Luciano Sicolo",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
