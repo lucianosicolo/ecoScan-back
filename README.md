@@ -153,3 +153,14 @@ adb reverse tcp:3000 tcp:3000
 ## Versión
 
 EcoScan Backend 1.0.0
+
+## Acceso desde el celular (Chrome y APK)
+
+Las dos modalidades siguen disponibles con el backend ejecutándose en la computadora:
+
+- **Chrome del celular:** levantar el frontend con `ionic serve --external` o `ng serve --host 0.0.0.0`; entrar a `http://IP_DE_LA_PC:4200` desde el celular; en el login, **Configurar servidor** con `http://IP_DE_LA_PC:3000`. En desarrollo se aceptan por CORS las IP privadas de la red local en los puertos 4200 y 8100.
+- **APK instalado:** en **Configurar servidor** ingresar `http://IP_DE_LA_PC:3000`; también sirve `adb reverse tcp:3000 tcp:3000` usando USB si se deja el valor predeterminado.
+
+El backend ya escucha en `0.0.0.0:3000`; la computadora y el celular deben estar en la misma red, con el firewall permitiendo el puerto 3000. En producción, las IP locales no se autorizan automáticamente por CORS: se agrega el origen exacto con `CORS_ALLOWED_ORIGINS=http://IP_DE_LA_PC:4200`. El acceso local HTTP es solo para desarrollo.
+
+**Google Maps:** el mapa integrado usa una clave diferente de la conexión al backend. Si esa clave únicamente autoriza `http://localhost:4200/*`, puede fallar desde Chrome por IP o desde el APK. En ese caso la lista de puntos verdes sigue disponible, y en Android la aplicación ofrece abrir el punto en Google Maps mediante un enlace sin API key.
