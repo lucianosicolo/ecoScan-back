@@ -45,31 +45,35 @@ import {
         type: 'mysql',
 
         host:
-          configService.get<string>(
-            'DB_HOST',
-          ),
+          configService
+            .getOrThrow<string>(
+              'DB_HOST',
+            ),
 
         port:
           Number(
             configService.get<string>(
               'DB_PORT',
-            ),
+            ) ?? '3306',
           ),
 
         username:
-          configService.get<string>(
-            'DB_USERNAME',
-          ),
+          configService
+            .getOrThrow<string>(
+              'DB_USERNAME',
+            ),
 
         password:
-          configService.get<string>(
-            'DB_PASSWORD',
-          ),
+          configService
+            .getOrThrow<string>(
+              'DB_PASSWORD',
+            ),
 
         database:
-          configService.get<string>(
-            'DB_NAME',
-          ),
+          configService
+            .getOrThrow<string>(
+              'DB_NAME',
+            ),
 
         autoLoadEntities: true,
 
