@@ -19,6 +19,14 @@ import {
   ScanModule,
 } from './scan/scan.module';
 
+import {
+  AppController,
+} from './app.controller';
+
+import {
+  AppService,
+} from './app.service';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -71,6 +79,14 @@ import {
 
     AuthModule,
     ScanModule,
+  ],
+
+  controllers: [
+    AppController,
+  ],
+
+  providers: [
+    AppService,
   ],
 })
 export class AppModule {}
